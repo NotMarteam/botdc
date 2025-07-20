@@ -1455,7 +1455,7 @@ async def reasignar_placa_slash(interaction: discord.Interaction, miembro: disco
     if canal:
         await canal.send(
             f"🔔 {miembro.mention}, tu nueva placa es **{placa:02d}**. "
-            "Por favor, usa este número a partir de ahora en tu apodo."
+            "Por favor, usa este número a partir de ahora en tu placa."
         )
     await interaction.response.send_message(f"✅ Placa reasignada a {miembro.mention} correctamente.", ephemeral=True)
 
