@@ -1401,6 +1401,64 @@ async def sancion_prefix(ctx, usuario: discord.Member, rol: discord.Role, strike
     except Exception as e:
         await ctx.send(f"❌ Error: {str(e)}")
 
+async def cambiar_placa(miembro, nueva_placa):
+    apodo_actual = miembro.nick or miembro.name
+    patron = r"^([A-Z]{2,4})-(\d{1,2}) \| (.+)$"
+    match = re.match(patron, apodo_actual)
+    if not match:
+        return None  # Formato incorrecto
+
+    abreviacion = match.group(1)
+    usuario_roblox = match.group(3)
+    nuevo_apodo = f"{abreviacion}-{nueva_placa:02d} | {usuario_roblox}"
+    await miembro.edit(nick=nuevo_apodo)
+    return nuevo_apodo
+
+@bot.command(name='reasignar-placa')
+@commands.has_permissions(manage_nicknames=True)
+async def reasignar_placa(ctx, miembro: discord.Member, placa: int):
+    if not (1 <= placa <= 99):
+        await ctx.send("❌ El número de placa debe estar entre 1 y 99.")
+        return
+
+    nuevo_apodo = await cambiar_placa(miembro, placa)
+    if not nuevo_apodo:
+        await ctx.send(
+            f"❌ El apodo de {miembro.mention} no tiene el formato correcto. Debe ser: `NVI-05 | UsuarioRoblox`"
+        )
+        return
+
+    canal = discord.utils.get(ctx.guild.text_channels, name="↪🧥》𝗖hat-𝗘mpleados")
+    if canal:
+        await canal.send(
+            f"🔔 {miembro.mention}, tu nueva placa es **{placa:02d}**. "
+            "Por favor, usa este número a partir de ahora en tu apodo."
+        )
+    await ctx.send(f"✅ Placa reasignada a {miembro.mention} correctamente.")
+
+@bot.tree.command(name="reasignar-placa", description="Reasigna la placa de un usuario")
+@app_commands.describe(miembro="Usuario a reasignar", placa="Nuevo número de placa (1-99)")
+async def reasignar_placa_slash(interaction: discord.Interaction, miembro: discord.Member, placa: int):
+    if not (1 <= placa <= 99):
+        await interaction.response.send_message("❌ El número de placa debe estar entre 1 y 99.", ephemeral=True)
+        return
+
+    nuevo_apodo = await cambiar_placa(miembro, placa)
+    if not nuevo_apodo:
+        await interaction.response.send_message(
+            f"❌ El apodo de {miembro.mention} no tiene el formato correcto. Debe ser: `NVI-05 | UsuarioRoblox`",
+            ephemeral=True
+        )
+        return
+
+    canal = discord.utils.get(interaction.guild.text_channels, name="↪🧥》𝗖hat-𝗘mpleados")
+    if canal:
+        await canal.send(
+            f"🔔 {miembro.mention}, tu nueva placa es **{placa:02d}**. "
+            "Por favor, usa este número a partir de ahora en tu apodo."
+        )
+    await interaction.response.send_message(f"✅ Placa reasignada a {miembro.mention} correctamente.", ephemeral=True)
+
 # Ejecutar el bot
 if __name__ == "__main__":
     token = os.getenv('DISCORD_TOKEN')
